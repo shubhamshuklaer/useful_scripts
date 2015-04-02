@@ -5,11 +5,6 @@
 #useful for submitting projects on turnitin
 #NO GUARANTEE that it will work without fail
 
-##TODO
-#Retain executable permission of executable file
-#automatically install the tools used
-#preserve binary files
-
 ##No newline at end of file problem
 #The C standard says that text files must end with a
 # newline or the data after the last newline may not be read properly.
@@ -60,7 +55,9 @@ function combine(){
     touch "$combined_file"
 
     #find dir will recursively list all files in the system in grep -v is used to invert selection
-    find_command="find $working_dir $filter_string"
+    #The -I option to grep tells it to immediately ignore binary files and the 
+    # . option along with the -l will make it immediately match text files so it goes very fast.
+    find_command="find $working_dir -type f $filter_string -exec grep -Il . {} \;"
     #eval is used to execute a string
     find_result=$(eval "$find_command")
 
@@ -120,8 +117,7 @@ function split(){
     #In this case, IFS is set to the empty string to prevent read from stripping leading and trailing whitespace from the line.
     #IFS environment variable is set inside loop so that it only acts on read
 
-    #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
-    while IFS= read -r line || [ -n "$line" ]
+    while IFS= read -r line
     do
         if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
         then
@@ -195,6 +191,7 @@ while getopts "d:m:f:a:h" opt; do
             echo "default for -f will be combined_file.txt"
             echo "thre is no filter in default so all files will be combined"
             echo "Note that split will replace files with same name so its safer to do it in an empty folder"
+            echo "Combine will not combine binary files or empty files... it will only combine text files"
             ;;
         \?)
             echo "Invalid syntax"
