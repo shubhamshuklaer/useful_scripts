@@ -153,6 +153,15 @@ function split(){
             fi
         fi 
     done < "$combined_file"
+    
+    #For the last file this has to be done out of loop
+    if [ -f "$output_file" ]
+    then
+        #-e option executes perl code from command line only
+        #-i option edit in file only
+        #-p run the perl code in a loop
+        perl -pi -e 'chomp if eof' "$output_file"
+    fi
 }
 
 
