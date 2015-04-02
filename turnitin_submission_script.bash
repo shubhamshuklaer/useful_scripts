@@ -10,6 +10,16 @@
 #automatically install the tools used
 #preserve binary files
 
+##No newline at end of file problem
+#The C standard says that text files must end with a
+# newline or the data after the last newline may not be read properly.
+#According to the POSIX spec for the read command, it should return a
+# nonzero status if "End-of-file was detected or an error occurred."
+# Since EOF is detected as it reads the last "line", it sets $line
+# and then returns an error status, and the error status prevents
+# the loop from executing on that last "line".
+# The solution is easy: make the loop execute 
+#if the read command succeeds OR if anything was read into $line.
 
 working_dir="."
 filter_file_name=""
@@ -22,7 +32,9 @@ function parse_filter_file(){
     then
         #cat $filter_file_name | while read line will not work if we want the val of variable which was updated inside loop
         #cause the piplining creates while in a subshell with own set of variables which are destroyed when while is finished
-        while read -r line
+
+        #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
+        while read -r line || [ -n "$line" ]
         do
             if [ -n "$filter_string" ]
             then
@@ -40,7 +52,12 @@ function parse_filter_file(){
 
 
 function combine(){
-    echo "" > "$combined_file"
+    if [ -e "$combined_file" ]
+    then
+        rm -f "$combined_file"
+    fi
+
+    touch "$combined_file"
 
     #find dir will recursively list all files in the system in grep -v is used to invert selection
     find_command="find $working_dir $filter_string"
@@ -60,7 +77,9 @@ function combine(){
                 relative_entry=${entry#$working_dir\/}
                 echo "%%%%%%$relative_entry%%%%%%" >> "$combined_file"
 
-                while IFS= read -r line
+
+                #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
+                while IFS= read -r line || [ -n "$line" ]
                 do
                     if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
                     then
@@ -85,14 +104,17 @@ function split(){
     output_file=""
     #In this case, IFS is set to the empty string to prevent read from stripping leading and trailing whitespace from the line.
     #IFS environment variable is set inside loop so that it only acts on read
-    while IFS= read -r line
+
+    #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
+    while IFS= read -r line || [ -n "$line" ]
     do
         if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
         then
             if [ -f "$output_file" ]
             then
-                #not working properly
-                #just removes the last line instead of newline only
+                #-e option executes perl code from command line only
+                #-i option edit in file only
+                #-p run the perl code in a loop
                 perl -pi -e 'chomp if eof' "$output_file"
             fi
             output_file="${BASH_REMATCH[1]}"
