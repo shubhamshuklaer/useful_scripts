@@ -54,9 +54,10 @@ function combine(){
 
     touch "$combined_file"
 
-    #find dir will recursively list all files in the system in grep -v is used to invert selection
-    #The -I option to grep tells it to immediately ignore binary files and the 
-    # . option along with the -l will make it immediately match text files so it goes very fast.
+    #find dir will recursively list all files applying the filter
+    #The -I option to grep tells it to ignore binary files and the 
+    # -l option tells it to output only file_names the . tells it to match anything
+    # since empty files contains no pattern so the are not matched
     find_command="find $working_dir -type f $filter_string -exec grep -Il . {} \;"
     #eval is used to execute a string
     find_result=$(eval "$find_command")
@@ -200,7 +201,7 @@ while getopts "d:m:f:a:h" opt; do
             echo "default for -f will be combined_file.txt"
             echo "thre is no filter in default so all files will be combined"
             echo "Note that split will replace files with same name so its safer to do it in an empty folder"
-            echo "Combine will not combine binary files or empty files... it will only combine text files"
+            echo "Combine will not combine binary files or empty files... it will only combine non empty text files"
             ;;
         \?)
             echo "Invalid syntax"
