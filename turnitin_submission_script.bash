@@ -9,7 +9,6 @@
 #Retain executable permission of executable file
 #automatically install the tools used
 #preserve binary files
-#what if the input files contain the %%%%%%% pattern eg like another combined file
 
 
 working_dir="."
@@ -60,7 +59,16 @@ function combine(){
                 #strip the working_dir from the entry
                 relative_entry=${entry#$working_dir\/}
                 echo "%%%%%%$relative_entry%%%%%%" >> "$combined_file"
-                cat "$entry" >>"$combined_file"
+
+                while IFS= read -r line
+                do
+                    if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
+                    then
+                        #will strip these that on split-- this is padding 
+                        line="@%@%@%@%@%@$line@%@%@%@%@%@"
+                    fi
+                    echo "$line" >> "$combined_file"
+                done < "$entry"
                 #Some files have a new line at end and some don't
                 #this line will insert a new line after every file so that 
                 #the pattern %%%%%% is on a new line
@@ -68,8 +76,6 @@ function combine(){
                 #retaining the old state of file
                 echo "">>"$combined_file"
             fi
-        else
-            echo "hello"
         fi
     done
 
@@ -85,11 +91,17 @@ function split(){
         then
             if [ -f "$output_file" ]
             then
+                #not working properly
+                #just removes the last line instead of newline only
                 perl -pi -e 'chomp if eof' "$output_file"
             fi
             output_file="${BASH_REMATCH[1]}"
             dir_name=$(dirname "$output_file")
             mkdir -p "$dir_name"
+            if [ -e "$output_file" ]
+            then
+                rm -f "$output_file"
+            fi
             touch "$output_file"
             echo "$output_file"
         else
@@ -97,6 +109,10 @@ function split(){
             then
                 if [ -f "$output_file" ]
                 then
+                    if [[ $line =~ ^@%@%@%@%@%@(%%%%%%.*%%%%%%)@%@%@%@%@%@$ ]]
+                    then
+                        line="${BASH_REMATCH[1]}"
+                    fi
                     echo "$line" >> "$output_file"
                 else
                     echo "file$output_file doesn't exist"
@@ -141,6 +157,7 @@ while getopts "d:m:f:a:h" opt; do
             echo "default for -d will be the current working dir"
             echo "default for -f will be combined_file.txt"
             echo "thre is no filter in default so all files will be combined"
+            echo "Note that split will replace files with same name so its safer to do it in an empty folder"
             ;;
         \?)
             echo "Invalid syntax"
