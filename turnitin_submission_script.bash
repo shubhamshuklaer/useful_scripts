@@ -78,8 +78,7 @@ function combine(){
                 echo "%%%%%%$relative_entry%%%%%%" >> "$combined_file"
 
 
-                #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
-                while IFS= read -r line || [ -n "$line" ]
+                while IFS= read -r line
                 do
                     if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
                     then
@@ -87,7 +86,23 @@ function combine(){
                         line="@%@%@%@%@%@$line@%@%@%@%@%@"
                     fi
                     echo "$line" >> "$combined_file"
+                    line=""
                 done < "$entry"
+
+                #See "No newline at end of file problem" on top of file to get the reason why I added this
+                #I kept it seperate casue I only wanted to add one extra newline at the end of file and that 
+                #is the job of echo "">>"$combined_file" so I used printf so that no new line is added.
+                #echo appends newline at end
+                if [ -n "$line" ]
+                then
+                    if [[ $line =~ ^%%%%%%(.*)%%%%%%$ ]]
+                    then
+                        #will strip these that on split-- this is padding 
+                        line="@%@%@%@%@%@$line@%@%@%@%@%@"
+                    fi
+                    printf "%s" "$line" >> "$combined_file"
+                fi
+
                 #Some files have a new line at end and some don't
                 #this line will insert a new line after every file so that 
                 #the pattern %%%%%% is on a new line
