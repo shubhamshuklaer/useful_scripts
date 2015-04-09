@@ -21,6 +21,7 @@ filter_file_name=""
 combined_file="combined_file.txt"
 action="combine"
 filter_string=""
+inclusion=0
 
 function parse_filter_file(){
     if [ -n "$filter_file_name" ]
@@ -31,16 +32,27 @@ function parse_filter_file(){
         #See "No newline at end of file problem" on top of file to get the reason why I added the or condition
         while read -r line || [ -n "$line" ]
         do
-            if [ -n "$filter_string" ]
-            then
-                filter_string="$filter_string -or"
-            fi
-            filter_string="$filter_string -path \"$working_dir/$line\""
+			#actually the last line can be empty line if there is a newline at end
+			if [ -n "$line" ]
+			then
+				if [ -n "$filter_string" ]
+				then
+					filter_string="$filter_string -or"
+				fi
+
+				filter_string="$filter_string -path \"$working_dir/$line\""
+			fi	
+
         done < "$filter_file_name"
 
         if [ -n "$filter_string" ]
         then
-            filter_string=" ! \\( $filter_string \\) "
+			if [ "$inclusion" -eq 0 ]
+			then
+				filter_string=" ! \\( $filter_string \\) "
+			else
+				filter_string=" \\( $filter_string \\) "
+			fi
         fi
     fi
 }
@@ -58,9 +70,15 @@ function combine(){
     #The -I option to grep tells it to ignore binary files and the 
     # -l option tells it to output only file_names the . tells it to match anything
     # since empty files contains no pattern so the are not matched
+	# Ignores the empty files
     find_command="find $working_dir -type f $filter_string -exec grep -Il . {} \;"
     #eval is used to execute a string
     find_result=$(eval "$find_command")
+
+	empty_files_find_command="find $working_dir -empty -type f $filter_string"
+	empty_files_find_result=$(eval "$empty_files_find_command")
+
+	find_result=$(printf "%s\n%s" "$find_result" "$empty_files_find_result")
 
     #no quotes on $find_result cause its a list not string
     for entry in $find_result
@@ -166,7 +184,7 @@ function split(){
 }
 
 
-while getopts "d:m:f:a:h" opt; do
+while getopts "d:m:f:a:hi" opt; do
     case $opt in
         d)
             working_dir="$OPTARG"
@@ -180,11 +198,14 @@ while getopts "d:m:f:a:h" opt; do
         a)
             action="$OPTARG"
             ;;
+		i)
+			inclusion=1
+			;;
         h)
             echo "Usage"
             echo "First give it executable permission using chmod +x turnitin_submission_script.bash"
             echo "then for execution"
-            echo "./turnitin_submission_script.bash [-d dir] [-m filter_file_name] [-f combined_file] [-a action]"
+            echo "./turnitin_submission_script.bash [-d dir] [-m filter_file_name] [-f combined_file] [-a action] [-i]"
             echo "action is either spilt or combine"
             echo "with action split arg of -d will act as output dir and arg of -f will act as input combined_file"
             echo "with action combine arg of -d will act as input dir and arg of -f will act as output combined_file"
@@ -201,7 +222,8 @@ while getopts "d:m:f:a:h" opt; do
             echo "default for -f will be combined_file.txt"
             echo "thre is no filter in default so all files will be combined"
             echo "Note that split will replace files with same name so its safer to do it in an empty folder"
-            echo "Combine will not combine binary files or empty files... it will only combine non empty text files"
+            echo "Combine will not combine binary files" 
+			echo "-i option will invert the use of filter_file i.e instead of being used as ignoring list it will be used as inclusion list"
             ;;
         \?)
             echo "Invalid syntax"
