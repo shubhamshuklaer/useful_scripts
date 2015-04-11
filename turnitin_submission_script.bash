@@ -224,10 +224,12 @@ while getopts "d:m:f:a:hi" opt; do
             echo "Note that split will replace files with same name so its safer to do it in an empty folder"
             echo "Combine will not combine binary files" 
 			echo "-i option will invert the use of filter_file i.e instead of being used as ignoring list it will be used as inclusion list"
+			exit 0
             ;;
         \?)
             echo "Invalid syntax"
             echo "use -h for help"
+			exit 2
             ;;
     esac
 done
