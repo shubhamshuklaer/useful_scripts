@@ -64,8 +64,6 @@ then
 else
     # pd is a bash function wrapping pycurl-download
     pd "$file_name" "$down_url"
-    # TODO the ret_val causes problem with pd as its not the ret val of
-    # download but the du -h loop. Fix this
     ret_val=$?
 fi
 
