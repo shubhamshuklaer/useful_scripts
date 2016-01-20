@@ -50,9 +50,10 @@ then
     body="$body \n Duration time: $duration"
 fi
 
-notify-send "Downloading" "$body"
 down_url=`youtube-dl -f $format -g $url`
 file_name=`youtube-dl -f $format --get-filename $url`
+
+notify-send "Downloading" "$body"
 if $download_part
 then
     extension="${file_name##*.}"
