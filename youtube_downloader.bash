@@ -50,8 +50,10 @@ then
     body="$body \n Duration time: $duration"
 fi
 
-down_url=`youtube-dl -f $format -g $url`
-file_name=`youtube-dl -f $format --get-filename $url`
+# use of --no-playlist - Download only the video, if the URL refers to a video
+# and a playlist
+down_url=`youtube-dl --no-playlist -f "$format" -g "$url"`
+file_name=`youtube-dl --no-playlist -f "$format" --get-filename "$url"`
 
 notify-send "Downloading" "$body"
 if $download_part
