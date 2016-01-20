@@ -15,6 +15,10 @@ time_to=${time_to//minutes/mins}
 time_to=${time_to//hours/hrs}
 state=`check_battery | awk '/.*state.*/ {print $2}'`
 
-# showing only first character for state
-echo "$percentage(${state:0:1})($time_to)"
-
+if [ $state  == "fully-charged" ]
+then
+    echo "Full"
+else
+    # showing only first character for state
+    echo "$percentage(${state:0:1})($time_to)"
+fi
