@@ -1,5 +1,6 @@
   * Some useful scripts that I use
-  * No guarantee of working
+  * No guarantee of correctness.
+  * They are not intended for using as is(though you can). You might have to modify a bit to get it working for you.
   * Some of them uses aliases present in my bash repository
 
 # Script's description
