@@ -52,8 +52,17 @@ fi
 
 # use of --no-playlist - Download only the video, if the URL refers to a video
 # and a playlist
-down_url=`youtube-dl --no-playlist -f "$format" -g "$url"`
-file_name=`youtube-dl --no-playlist -f "$format" --get-filename "$url"`
+
+# Combined into one to reduce download start time
+# down_url=`youtube-dl --no-playlist -f "$format" -g "$url"`
+# file_name=`youtube-dl --no-playlist -f "$format" --get-filename "$url"`
+
+tmp=`youtube-dl --no-playlist -f "$format" -g --get-filename "$url"`
+# tmp will contain the url followed by space followed by name
+# the url will be encoded i.e the space will be encoded using %20 etc so there won't be any space in url, so we will cut the first part of tmp to get down_url
+down_url=$(echo $tmp | cut -f 1 -d " ")
+# file_name can be extracted from tmp by collecting everything from column no 2 onwards
+file_name=$(echo $tmp | cut -f 2- -d " ")
 
 notify-send "Downloading" "$body"
 if $download_part

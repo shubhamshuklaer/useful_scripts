@@ -19,6 +19,7 @@ if [ $state  == "fully-charged" ]
 then
     echo "Full"
 else
+    # TODO show color based on percentage
     # showing only first character for state
     echo "$percentage(${state:0:1})($time_to)"
 fi
