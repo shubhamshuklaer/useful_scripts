@@ -64,6 +64,8 @@ down_url=$(echo $tmp | cut -f 1 -d " ")
 # file_name can be extracted from tmp by collecting everything from column no 2 onwards
 file_name=$(echo $tmp | cut -f 2- -d " ")
 
+body="$body \n File_name: $file_name"
+
 notify-send "Downloading" "$body"
 if $download_part
 then
